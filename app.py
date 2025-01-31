@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify
-import pandas as pd
 from io import BytesIO
 from processing import get_data
 

@@ -7,10 +7,25 @@
     <title>File Upload</title>
 </head>
 <body>
-    <h1>Upload a File</h1> <br>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-    </form>
+    <div class="info">
+        <h1>RNA ISAS</h1>
+        <p>Upload a CSV, TSV, or other supported formats.</p>
+    </div>
+    <br><br>
+    <div class="container">    
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="input-group">
+                <input type="file" name="file" required>
+                <input type="number" name="count" placeholder="Filter Count" min="-1">
+            </div>
+            <input type="submit" value="Upload">
+        </form>
+    </div>
+    <br><br>
+    <div class="info">
+        <h2>Hello!</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+    </div>
 </body>
 </html>
