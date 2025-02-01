@@ -31,18 +31,28 @@ def get_data(file_stream: BytesIO, filename: str) -> pd.DataFrame:
         raise ValueError(f"Error processing file: {e}")
 
 
-def normalize_read_counts(df: pd.DataFrame) -> None:
+def normalize_read_counts(df: pd.DataFrame, r: requests.Request) -> None:
+    columns = df.columns.tolist()
+    del columns[0]
     for i in range(len(df)):
-        r = requests.get("https://rest.ensembl.org/lookup/id/" + df['ensg_ids'][i])
-        data = r.json()
-        df['read_count'][i] = df['read_count'][i] / (float(data['end']) - float(data['start']))
+        for column in columns:
+            df[column][i] = df[column][i] / (float(data['end']) - float(data['start']) + 1)
     print("Read counts normalized!")
     return 
 
+def remove_low_counts(df: pd.DataFrame,num: int) -> None:
+    columns = df.columns.tolist()
+    del columns[0]
+    for i in range(len(df)):
+        if i > len(df):
+            break
+        if (df.iloc[i] <= num).all():
+            df = df.drop(i)
+            i -= 1
+    print("Low read counts removed!")
 
 def get_gene_info(df: pd.DataFrame) -> pd.DataFrame:
     gp = GProfiler(
         return_dataframe=True
     )
     return gp.profile(organism="hsapiens", query=list(df["ensg_ids"]))
-
