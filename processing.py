@@ -199,9 +199,12 @@ def add_gene_columns_to_df(df):
         'locus_tag': '',
     }
 
-    # Add the new columns to the existing DataFrame with the default values
+    # Ensure each column matches the length of the DataFrame
     for col, value in gene_columns.items():
-        df[col] = value
+        df[col] = [value] * len(df)  # Assign a value repeated to match the DataFrame's length
+
+    return df
+
 
 def add_gene_info(row):
     ensg_id = row['Geneid']
