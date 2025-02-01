@@ -4,38 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
     <title>File Upload</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        .wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        #network {
+            width: 100%;
+            height: 100vh;
+            background: white;
+        }
+    </style>
 </head>
 <body>
-    <div class="info">
-        <h1>RNA ISAS</h1>
-        <p>Upload a CSV, TSV, or other supported formats.</p>
-    </div>
-    <br><br>
-    <div class="container">    
-        <form id="upload-form" enctype="multipart/form-data">
-            <div class="input-group">
-                <input type="file" name="file" id="file" required>
-                <input type="number" name="count" placeholder="Filter Count" min="-1">
+    <div class="wrapper">
+        <div class="left-panel">
+            <div class="info">
+                <h1>RNA ISAS</h1>
+                <p>Upload a CSV, TSV, or other supported formats.</p>
             </div>
-            <input type="submit" value="Upload">
-        </form>
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" name="file" id="file" required>
+                    <input type="number" name="count" placeholder="Filter Count" min="-1">
+                </div>
+                <br><br>
+                <input type="submit" value="Upload" style="width: 50%; text-align: center;">
+            </form>
+        </div>
+        <div class="right-panel">
+            <div class="tab-bar">
+                <button class="tab-button" onclick="openTab('blue')">Knowledge Graph</button>
+                <button class="tab-button" onclick="openTab('table')">Data Overview</button>
+                <button class="tab-button" onclick="openTab('red')">Insert Here</button>
+            </div>
+            <div id="blue" class="tab-content" style="display: block; background-color: blue; height: 100vh;">
+                <div id="network"></div>
+            </div>
+            <div id="table" class="tab-content" style="display: none;">
+                <h2>Top 20 Entries</h2>
+                <table id="result-table">
+                    <thead>
+                        <tr>
+                            <th>Gene ID</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="red" class="tab-content" style="display: none; background-color: red; height: 100%;"></div>
+        </div>
     </div>
-    <br><br>
-    <div class="container">
-        <h2>Top 20 Entries</h2>
-        <table id="result-table">
-            <thead>
-                <tr>
-                    <th>Gene ID</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>        
-    </div>
-
     <script>
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(tabName).style.display = 'block';
+        }
+
         document.getElementById('upload-form').addEventListener('submit', function(event) {
             event.preventDefault();
             
@@ -52,8 +89,7 @@
                     alert(data.error);
                 } else {
                     let tableBody = document.querySelector('#result-table tbody');
-                    tableBody.innerHTML = "";  // Clear previous results
-
+                    tableBody.innerHTML = "";
                     data.top_data.forEach(row => {
                         let tr = document.createElement('tr');
                         tr.innerHTML = `<td>${row.gene_id || 'N/A'}</td><td>${row.count || 'N/A'}</td>`;
@@ -64,6 +100,41 @@
             .catch(error => console.error('Error:', error));
         });
 
+        // Initialize vis.js graph with custom node shapes and styles
+        var nodes = new vis.DataSet([
+            {id: 1, label: 'Node 1', shape: 'box', color: {background: '#45a049', border: '#45a049', highlight: {background: '#45a049', border: '#45a049'}}, font: {color: 'white'}, borderRadius: 5},
+            {id: 2, label: 'Node 2', shape: 'box', color: {background: '#45a049', border: '#45a049', highlight: {background: '#45a049', border: '#45a049'}}, font: {color: 'white'}, borderRadius: 5}
+        ]);
+
+        var edges = new vis.DataSet([
+            {from: 1, to: 2, color: {color: '#45a049'}}
+        ]);
+
+        var container = document.getElementById('network');
+        var data = { nodes: nodes, edges: edges };
+        var options = {
+            nodes: {
+                shape: 'box',
+                borderRadius: 5,
+                margin: 10,
+                color: {
+                    background: '#45a049',
+                    border: '#45a049',
+                    highlight: {
+                        background: '#45a049',
+                        border: '#45a049'
+                    }
+                },
+                font: {
+                    color: 'white'
+                }
+            },
+            edges: {
+                color: '#45a049'
+            }
+        };
+
+        var network = new vis.Network(container, data, options);
     </script>
 </body>
 </html>
