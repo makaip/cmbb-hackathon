@@ -3,8 +3,6 @@ f = open(".env", "r")
 key = f.readline()
 f.close()
 
-
-
 class Gemini:
     model = None
     def __init__(self):

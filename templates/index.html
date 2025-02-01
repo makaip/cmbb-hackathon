@@ -13,19 +13,57 @@
     </div>
     <br><br>
     <div class="container">    
-        <form action="/upload" method="post" enctype="multipart/form-data">
+        <form id="upload-form" enctype="multipart/form-data">
             <div class="input-group">
-                <input type="file" name="file" required>
+                <input type="file" name="file" id="file" required>
                 <input type="number" name="count" placeholder="Filter Count" min="-1">
             </div>
             <input type="submit" value="Upload">
         </form>
     </div>
     <br><br>
-    <div class="info">
-        <h2>Hello!</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
+    <div class="container">
+        <h2>Top 20 Entries</h2>
+        <table id="result-table">
+            <thead>
+                <tr>
+                    <th>Gene ID</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>        
     </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            let formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    let tableBody = document.querySelector('#result-table tbody');
+                    tableBody.innerHTML = "";  // Clear previous results
+
+                    data.top_data.forEach(row => {
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${row.gene_id || 'N/A'}</td><td>${row.count || 'N/A'}</td>`;
+                        tableBody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+    </script>
 </body>
 </html>
