@@ -20,7 +20,8 @@ def upload_file():
     if file:
         try:
             file_stream = BytesIO(file.read())
-            row_count = get_data(file_stream, file.filename)
+            df = get_data(file_stream, file.filename)  # Get the DataFrame
+            row_count = len(df)  # Get the number of rows
         except Exception as e:
             return jsonify({'error': str(e)}), 400
         
