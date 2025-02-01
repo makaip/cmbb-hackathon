@@ -6,8 +6,9 @@
 
 import pandas as pd
 from io import BytesIO
-
-def get_data(file_stream: BytesIO, filename: str) -> int:
+from gprofiler import GProfiler
+import requests
+def get_data(file_stream: BytesIO, filename: str) -> pd.DataFrame:
     """
     Reads the uploaded file and returns the number of rows.
 
@@ -17,15 +18,31 @@ def get_data(file_stream: BytesIO, filename: str) -> int:
     """
     try:
         if filename.endswith('.csv'):
-            df = pd.read_csv(file_stream)
+            return pd.read_csv(file_stream)
         elif filename.endswith('.tsv'):
-            df = pd.read_csv(file_stream, sep='\t')
+            return pd.read_csv(file_stream, sep='\t')
         elif filename.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(file_stream)
+            return pd.read_excel(file_stream)
         else:
             raise ValueError("Unsupported file format")
 
-        return len(df)  # Return number of rows
+        
     except Exception as e:
         raise ValueError(f"Error processing file: {e}")
+
+
+def normalize_read_counts(df: pd.DataFrame) -> None:
+    for i in range(len(df)):
+        r = requests.get("https://rest.ensembl.org/lookup/id/" + df['ensg_ids'][i])
+        data = r.json()
+        df['read_count'][i] = df['read_count'][i] / (float(data['end']) - float(data['start']))
+    print("Read counts normalized!")
+    return 
+
+
+def get_gene_info(df: pd.DataFrame) -> pd.DataFrame:
+    gp = GProfiler(
+        return_dataframe=True
+    )
+    return gp.profile(organism="hsapiens", query=list(df["ensg_ids"]))
 
