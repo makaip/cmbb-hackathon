@@ -74,6 +74,14 @@ table {
     margin-top: 20px;
 }
 
+#table {
+    display: none;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+
 th, td {
     border: 1px solid #ddd;
     padding: 10px;
