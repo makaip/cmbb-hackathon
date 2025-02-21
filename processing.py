@@ -3,8 +3,7 @@ from io import BytesIO
 import requests
 from typing import Dict
 import time
-
-ensg_to_ncbi_df = pd.read_excel('mart_export.xlsx') 
+import gget
 def get_data(file_stream: BytesIO, filename: str) -> pd.DataFrame:
     """
     Reads the uploaded file and returns a Pandas DataFrame.
@@ -50,8 +49,12 @@ def get_local_data(filename: str) -> pd.DataFrame:
     get_top_genes(df,df.columns.tolist()[1],20)
     add_gene_columns_to_df(df)
     for index, row in df.iterrows():
-        # Process current row
-        df.loc[index] = add_gene_info(row)
+       # Process current row     
+        state = add_gene_info(row)
+        if isinstance(state, str):
+            df.drop(index,axis=0,inplace=True)
+            continue
+        df.loc[index] = state
         time.sleep(0.3333)
     print("Gene data acquired!")
     
@@ -112,7 +115,7 @@ def get_gene_info(df: pd.DataFrame) -> Dict[str, Dict[str, float]]:
         
         if response.status_code == 200:
             gene_data[gene_id] = response.json()
-            print(f"Data for {gene_id} fetched!")
+            print(f"Read counts for {gene_id} fetched!")
             
             i += 1
             time.sleep(0.065)   
@@ -126,24 +129,18 @@ def get_top_genes(df, column, num_genes):
     return df.nlargest(num_genes, column)
 
 
-def convert_ensg_to_ncbi(ensg_id) -> str:
+def convert_ensg_to_ncbi(ensg_id: str) -> str:
+    """
+    Convert an ENSG ID to an NCBI Gene ID using the global ensg_to_ncbi_df DataFrame.
+    
+    :param ensg_id: The ENSG ID to convert.
+    :return: The corresponding NCBI Gene ID, or "NCBI ID not found" if not available.
+    """
     print("Converting ENSG ID to NCBI ID...")
-    # Load the spreadsheet into a DataFrame
-    df = ensg_to_ncbi_df
-    # Ensure column names are stripped of leading/trailing spaces
-    df.columns = df.columns.str.strip()
+    ncbi_id = gget.info([ensg_id]).ncbi_gene_id[ensg_id]
+    if ncbi_id != ncbi_id: return "NCBI ID not found"
+    return ncbi_id
 
-    # Filter out rows where "Gene descriptor" is "novel transcript"
-    df_filtered = df[df["Gene descriptor"] != "novel transcript"]
-
-    # Create a mapping from ENSG (Gene stable ID) to NCBI Gene ID
-    ensg_to_ncbi = df_filtered.set_index("Gene stable ID")["NCBI gene (formerly Entrezgene) ID"].dropna()
-
-    # Return the corresponding NCBI Gene ID for the given ENSG ID (if exists)
-    return ensg_to_ncbi.get(ensg_id, "NCBI ID not found")
-# Example usage:
-# ncbi_id = convert_ensg_to_ncbi("genes_data.xlsx", "ENSG00000209")
-# print(ncbi_id)
 
 
 def fetch_gene_data(ncbi_id):
@@ -152,13 +149,15 @@ def fetch_gene_data(ncbi_id):
     :param ncbi_id: a gene's NCBI id
     '''
     url = f"https://api.ncbi.nlm.nih.gov/datasets/v2/gene/id/{ncbi_id}"
-    print("Fetching gene data from NCBI...")
+    
     if ncbi_id == "NCBI ID not found":
         print("This gene does not have an NCBI id")
         return {"error": "NNI"} # no ncbi id error
     try:
+        print("Fetching gene data from NCBI...")
         response = requests.get(url)
         response.raise_for_status()  # Raise an error for bad responses (4xx and 5xx)
+        print("NCBI data succesfully acquired!")
         return response.json()  # Return JSON response
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
@@ -209,9 +208,15 @@ def add_gene_columns_to_df(df):
 def add_gene_info(row):
     ensg_id = row['Geneid']
     ncbi_id = convert_ensg_to_ncbi(ensg_id)
+    
+    if type(ncbi_id) != "Series":
+        if ncbi_id == "NCBI ID not found":
+            return ncbi_id
     gene_data = fetch_gene_data(ncbi_id)
      # Extract gene information from the report
-    gene_info = gene_data.get('gene', {})
+    gene_info = gene_data.get('reports', [])[0]
+    print("Gene info:", gene_info)
+    gene_info = gene_data.get('gene',{})
 
     # Define the gene columns to be updated from the report
     gene_columns = {
