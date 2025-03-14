@@ -45,7 +45,7 @@
             <div class="tab-bar">
                 <button class="tab-button" onclick="openTab('blue')">Knowledge Graph</button>
                 <button class="tab-button" onclick="openTab('table')">Data Overview</button>
-                <button class="tab-button" onclick="openTab('red')">Insert Here</button>
+                <button class="tab-button" onclick="openTab('red')">RNA Breakdown</button>
             </div>
             <div id="blue" class="tab-content" style="display: block; background-color: blue; height: 100vh;">
                 <div id="network"></div>
@@ -102,14 +102,19 @@
 
         // Initialize vis.js graph with custom node shapes and styles
         var nodes = new vis.DataSet([
-            {id: 1, label: 'Node 1', shape: 'box', color: {background: '#45a049', border: '#45a049', highlight: {background: '#45a049', border: '#45a049'}}, font: {color: 'white'}, borderRadius: 5},
-            {id: 2, label: 'Node 2', shape: 'box', color: {background: '#45a049', border: '#45a049', highlight: {background: '#45a049', border: '#45a049'}}, font: {color: 'white'}, borderRadius: 5}
+            {id: 1, label: 'MTC01', shape: 'box', color: {background: '#45a049', border: '#2e7d32'}, font: {color: 'white'}},
+            {id: 2, label: 'Mitochondria', shape: 'ellipse', color: {background: '#ff9800', border: '#f57c00'}, font: {color: 'white'}},
+            {id: 3, label: 'ATP Production', shape: 'ellipse', color: {background: '#2196F3', border: '#1976D2'}, font: {color: 'white'}},
+            {id: 4, label: 'Cell Respiration', shape: 'ellipse', color: {background: '#9C27B0', border: '#7B1FA2'}, font: {color: 'white'}},
+            {id: 5, label: 'MTC02', shape: 'box', color: {background: '#45a049', border: '#2e7d32'}, font: {color: 'white'}}
         ]);
 
         var edges = new vis.DataSet([
-            {from: 1, to: 2, color: {color: '#45a049'}}
+            {from: 1, to: 2, color: {color: '#ff9800'}},
+            {from: 2, to: 3, color: {color: '#2196F3'}},
+            {from: 3, to: 4, color: {color: '#9C27B0'}},
+            {from: 4, to: 5, color: {color: '#45a049'}}
         ]);
-
         var container = document.getElementById('network');
         var data = { nodes: nodes, edges: edges };
         var options = {
