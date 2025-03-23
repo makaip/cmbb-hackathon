@@ -1,7 +1,8 @@
+import chardet
+import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from io import BytesIO
-import pandas as pd
-from processing import get_data
+from abstracted.processing import process_data
 
 app = Flask(__name__)
 
@@ -21,22 +22,42 @@ def upload_file():
     if file:
         try:
             file_stream = BytesIO(file.read())
-            df = get_data(file_stream, file.filename)  # Get the DataFrame
-            
-            # Rename first two columns
-            if df.shape[1] < 2:
-                return jsonify({'error': 'File must contain at least two columns'}), 400
-            
-            df.columns = ['gene_id', 'count'] + list(df.columns[2:])  # Rename first two columns
-            
-            if 'count' in df.columns:
-                df = df.sort_values(by='count', ascending=False)  # Sort by "count" column
-                top_20 = df[['gene_id', 'count']].head(20).to_dict(orient='records')  # Get top 20 rows
+            file_extension = file.filename.split('.')[-1].lower()
+
+            # Handle different file formats
+            if file_extension in ['xls', 'xlsx']:
+                df_input = pd.read_excel(file_stream)  # Read Excel file
+            elif file_extension in ['csv', 'tsv']:
+                file_stream.seek(0)  # Reset stream position
+                
+                # Auto-detect encoding
+                raw_data = file_stream.read(10000)
+                detected_encoding = chardet.detect(raw_data)['encoding']
+                file_stream.seek(0)
+
+                delimiter = ',' if file_extension == 'csv' else '\t'  # CSV or TSV handling
+                df_input = pd.read_csv(file_stream, encoding=detected_encoding or 'utf-8', delimiter=delimiter)
             else:
-                return jsonify({'error': 'No "count" column found in the data'}), 400
-            
-            return jsonify({'rows': len(df), 'top_data': top_20})
-        
+                return jsonify({'error': 'Unsupported file format'}), 400
+
+            # Get max_rows from form data (default to 20)
+            max_rows = request.form.get('count', 20)
+            max_rows = int(max_rows)
+            if max_rows < 0:
+                max_rows = 100000
+
+            # Process the data
+            df = process_data(df_input, max_rows=max_rows, gene_limit=100, max_workers=100)
+
+            # Fill missing gene_id values
+            df['gene_id'] = df['gene_id'].fillna("N/A").astype(str)
+            df['Normalized_Read_Counts'] = df['Normalized_Read_Counts'].fillna(0).astype(int)
+
+            return jsonify({
+                'rows': len(df),
+                'top_data': df[['gene_id', 'Normalized_Read_Counts']].to_dict(orient='records')
+            })
+
         except Exception as e:
             return jsonify({'error': str(e)}), 400
 
