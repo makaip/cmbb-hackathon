@@ -98,12 +98,8 @@
                     alert(data.error);
                 } else {
                     let tableBody = document.querySelector('#result-table tbody');
-                    tableBody.innerHTML = "";
-                    data.top_data.forEach(row => {
-                        let tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${row.gene_id || 'N/A'}</td><td>${row.Normalized_Read_Counts || 0}</td>`;
-                        tableBody.appendChild(tr);
-                    });
+                    console.log(data)
+                    tableBody.innerHTML = String(data)
                 }
             })
             .catch(error => {
