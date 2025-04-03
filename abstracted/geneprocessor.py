@@ -8,7 +8,7 @@ class GeneDataProcessor:
     """
 
     DEFAULT_GENE_COLUMNS = {
-        'gene_id': '', 'symbol': '', 'description': '', 'tax_id': '', 'taxname': '',
+        'ncbi_gene_id': '', 'symbol': '', 'description': '', 'tax_id': '', 'taxname': '',
         'common_name': '', 'type': 'UNKNOWN', 'rna_type': 'rna_UNKNOWN', 'orientation': 'none',
         'reference_standards': [], 'genomic_regions': [], 'chromosomes': [],
         'nomenclature_authority': {}, 'swiss_prot_accessions': [], 'ensembl_gene_ids': [],
@@ -85,7 +85,7 @@ class GeneDataProcessor:
             gene_info = cls.fetch_gene_info(row['NCBI_ID'])
 
             if gene_info:
-                df.at[index, 'gene_id'] = gene_info['reports']['gene']['gene_id'] if 'gene_id' in gene_info['reports']['gene'] else ''
+                df.at[index, 'ncbi_gene_id'] = gene_info['reports']['gene']['ncbi_gene_id'] if 'ncbi_gene_id' in gene_info['reports']['gene'] else ''
                 df.at[index, 'symbol'] = gene_info['reports']['gene']['symbol'] if 'symbol' in gene_info['reports']['gene'] else ''
                 df.at[index, 'description'] = gene_info['reports']['gene']['description'] if 'description' in gene_info['reports']['gene'] else ''
                 df.at[index, 'tax_id'] = gene_info['reports']['gene']['tax_id'] if 'tax_id' in gene_info['reports']['gene'] else ''

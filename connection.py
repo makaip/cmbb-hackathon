@@ -1,28 +1,54 @@
 import json
-
+from r_types import RelationType
 class Node:
     id: int = None
     label: str = None
-    def __init__(self,id,label):
+    props: dict = {}
+    description: str = None
+    def __init__(self,id,label,description='', props={}):
         self.id = id
         self.label = label
+        self.props = {}
+        self.description = description
+    # {id: 1, label: 'MTC01', shape: 'box', color: {background: '#45a049', border: '#2e7d32'}, font: {color: 'white'}}
 class Edge:
     id: str = None
     source: Node = None
     target: Node = None
     label: str = None
-    def __init__(self,source: Node, target: Node):
+    relation_type: RelationType = None
+    description: str = None
+
+    
+    # {from: 1, to: 2, color: {color: '#ff9800'} }
+    def __init__(self,source: Node, target: Node, rt: RelationType, description: str):
         self.source = source
         self.target = target
         self.label = source.label + "->" +  target.label
         self.id = str(source.id) + "->" + str(target.id)
+        self.relation_type = RelationType(rt)
+        self.description = description
     def to_dict(self):
         """Convert Edge to dictionary for JSON serialization."""
+        # Set color based on relation type
+        color = ''
+        if self.relation_type == RelationType.BP:
+            color = '#4CAF50'  # Green for Biological Process
+        elif self.relation_type == RelationType.MF:
+            color = '#2196F3'  # Blue for Molecular Function
+        elif self.relation_type == RelationType.CC:
+            color = '#9C27B0'  # Purple for Cellular Component
+        elif self.relation_type == RelationType.AI:
+            color = '#FF5722'  # Orange for AI based connection
+        else:
+            color = '#757575'  # Grey default
+                    
         return {
-            "id": self.id,
-            "source": self.source.id,
-            "target": self.target.id,
-            "label": self.label
+            "from": self.source.id,
+            "to": self.target.id,
+            "label": self.relation_type.name,  # Using .name to get the enum string value
+            'color': {'color': color},
+            'title': self.description
         }
 
 def export_edges_to_dict(nodes, edges):
@@ -42,7 +68,8 @@ def export_edges_to_dict(nodes, edges):
         nodes_list = nodes
     
     # Convert to dictionaries for JSON serialization
-    nodes_data = [{"id": node.id, "label": node.label} for node in nodes_list]
+    nodes_data = [{"id": node.id, "label": node.label,"title": node.description} for node in nodes_list]
+    print([str(node) for node in nodes_data])
     edges_data = [edge.to_dict() for edge in edges]
     
     data = {
@@ -80,7 +107,7 @@ def relationships_to_edges(relationships, nodes_dict=None):
         for i in range(len(gene_ids) - 1):
             source_node = nodes_dict[gene_ids[i]]
             target_node = nodes_dict[gene_ids[i+1]]
-            edge = Edge(source_node, target_node)
+            edge = Edge(source_node, target_node, rt=relationship['relation_type'],description=relationship['description'])
             edges.append(edge)
             ##
     

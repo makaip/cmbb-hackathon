@@ -11,7 +11,7 @@
     <div class="wrapper">
         <div class="left-panel">
             <div class="info">
-                <h1>RNA ISAS</h1>
+                <h1>BioSeq AI</h1>
                 <p>Upload a CSV, TSV, or other supported formats.</p>
             </div>
             <form id="upload-form" enctype="multipart/form-data">
@@ -98,8 +98,68 @@
                     alert(data.error);
                 } else {
                     let tableBody = document.querySelector('#result-table tbody');
-                    console.log(data)
-                    tableBody.innerHTML = String(data)
+                    console.log(data);
+                    tableBody.innerHTML = "";
+                    data.top_rows.forEach(row => {
+                        let tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${row.gene_id || 'N/A'}</td><td>${row.Normalized_Read_Counts || 0}</td>`;
+                        tableBody.appendChild(tr);
+                    });
+
+                    // Clear existing nodes and edges
+                    nodes.clear();
+                    edges.clear();
+                    
+                    // Add new nodes and edges from the response
+                    if (data.connections) {
+                        data.connections.nodes.forEach(node => {
+                            let new_container = document.createElement("div");
+
+                            let title = document.createElement("h1");
+                            title.innerText = node.label;
+
+                            let p = document.createElement('p')
+                            p.innerText = `Click the gene twice to go to this gene's NCBI page`
+
+                            let link = `https://www.ncbi.nlm.nih.gov/gene/?term=${node.label}`
+
+                            let description_container = document.createElement("p");
+                            description_container.innerText = node.title
+
+                            new_container.appendChild(title);
+                            new_container.appendChild(description_container);
+                            new_container.appendChild(p);
+                            
+
+                            nodes.add({id: node.id, label: node.label, title: new_container, link: link});
+                            let node_ele = document.createElement('p');
+                            node_ele.style.display = 'none';
+                            node_ele.id = node.id;
+                            node_ele.innerText = link
+                        });
+                        
+                        data.connections.edges.forEach(edge => {
+                            edges.add(edge);
+                        });
+                    }
+                    
+                    // Update options to show edge titles on hover
+                    options.edges.hoverWidth = 2;
+                    options.edges.selectionWidth = 2;
+                    options.edges.font = {
+                        size: 12,
+                        color: '#000000',
+                        strokeWidth: 0,
+                        background: 'rgba(255, 255, 255, 0.7)'
+                    };
+                    options.edges.smooth = {
+                        enabled: true,
+                        type: 'continuous',
+                        forceDirection: 'none'
+                    };
+                    
+                    // Recreate the network with updated options
+                    network.setOptions(options);
                 }
             })
             .catch(error => {
@@ -113,48 +173,100 @@
 
 
         // Initialize vis.js graph with custom node shapes and styles
-        var nodes = new vis.DataSet([
-            {id: 1, label: 'MTC01', shape: 'box', color: {background: '#45a049', border: '#2e7d32'}, font: {color: 'white'}},
-            {id: 2, label: 'Mitochondria', shape: 'ellipse', color: {background: '#ff9800', border: '#f57c00'}, font: {color: 'white'}},
-            {id: 3, label: 'ATP Production', shape: 'ellipse', color: {background: '#2196F3', border: '#1976D2'}, font: {color: 'white'}},
-            {id: 4, label: 'Cell Respiration', shape: 'ellipse', color: {background: '#9C27B0', border: '#7B1FA2'}, font: {color: 'white'}},
-            {id: 5, label: 'MTC02', shape: 'box', color: {background: '#45a049', border: '#2e7d32'}, font: {color: 'white'}}
-        ]);
-
-        var edges = new vis.DataSet([
-            {from: 1, to: 2, color: {color: '#ff9800'}},
-            {from: 2, to: 3, color: {color: '#2196F3'}},
-            {from: 3, to: 4, color: {color: '#9C27B0'}},
-            {from: 4, to: 5, color: {color: '#45a049'}}
-        ]);
+        var nodes = new vis.DataSet([]);
+        var edges = new vis.DataSet([]);
         var container = document.getElementById('network');
         var data = { nodes: nodes, edges: edges };
         var options = {
             nodes: {
-                shape: 'box',
-                borderRadius: 5,
-                margin: 10,
-                color: {
-                    background: '#45a049',
-                    border: '#45a049',
-                    highlight: {
-                        background: '#45a049',
-                        border: '#45a049'
-                    }
-                },
-                font: {
-                    color: 'white'
+            shape: 'box',
+            borderWidth: 5,
+            margin: 10,
+            color: {
+                background: '#45a049',
+                border: '#45a049',
+                highlight: {
+                background: '#45a049',
+                border: '#45a049'
                 }
+            },
+            font: {
+                color: 'white'
+            }
             },
             edges: {
                 color: {
                     color: '#45a049',
                     highlight: '#368038'  
+                },
+                length: 250,  // Increase this value to make connections longer
+                smooth: {
+                    enabled: true,
+                    type: 'dynamic',
+                    roundness: 0.5
                 }
-            }
+                },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        springLength: 200,  // Increase this for longer connections
+                        springConstant: 0.04,  // Decrease this to make edges less rigid
+                        "avoidOverlap": 0.2
+                    },
+                    stabilization: {
+                        iterations: 1000
+                    }
+                }, 
+                interaction: {
+                    dragNodes:true,
+                    dragView: true,
+                    hideEdgesOnDrag: false,
+                    hideNodesOnDrag: false,
+                    hover: true,
+                    hoverConnectedEdges: true,
+                        keyboard: {
+                        enabled: false,
+                        speed: {x: 10, y: 10, zoom: 0.02},
+                        bindToWindow: true,
+                    },
+                    multiselect: false,
+                    navigationButtons: false,
+                    selectable: true,
+                    selectConnectedEdges: true,
+                    tooltipDelay: 600,
+                    zoomView: true
+                }
         };
 
         var network = new vis.Network(container, data, options);
+
+        // Track double-click logic
+        let lastClickTime = 0;
+        let lastClickedNode = null;
+        const doubleClickThreshold = 300; // Time in milliseconds
+
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                var nodeId = params.nodes[0];
+                var currentTime = new Date().getTime();
+
+                if (lastClickedNode === nodeId && (currentTime - lastClickTime) < doubleClickThreshold) {
+                    // Double-click detected
+                    var node = nodes.get(nodeId);
+                    if (node.link) {
+                        window.open(node.link, "_blank"); // Open link in new tab
+                    } else {
+                        alert("Double-clicked on node: " + node.label);
+                    }
+                    lastClickedNode = null; // Reset to prevent re-triggering
+                } else {
+                    // First click detected
+                    lastClickedNode = nodeId;
+                    lastClickTime = currentTime;
+                }
+            }
+        });
     </script>
 </body>
 </html>
