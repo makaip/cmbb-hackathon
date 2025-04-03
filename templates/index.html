@@ -45,7 +45,7 @@
                 <button class="tab-button" onclick="openTab('table')">Data Overview</button>
                 <button class="tab-button" onclick="openTab('red')">RNA Breakdown</button>
             </div>
-            <div id="blue" class="tab-content" style="display: block; background-color: blue; height: 100vh;">
+            <div id="blue" class="tab-content" style="display: block; background-color: #f0f5ff; height: 100vh;">
                 <div id="network"></div>
             </div>
             <div id="table" class="tab-content" style="display: none; overflow: auto; height: 100vh;">
@@ -63,7 +63,7 @@
                 </table>
                 <br><br><br><br><br><br><br><br>
             </div>
-            <div id="red" class="tab-content" style="display: none; background-color: red; height: 100%;"></div>
+            <div id="red" class="tab-content" style="display: none; background-color: #f7f1fe; height: 100%;"></div>
         </div>
     </div>
     <script>
@@ -179,25 +179,29 @@
         var data = { nodes: nodes, edges: edges };
         var options = {
             nodes: {
-            shape: 'box',
-            borderWidth: 5,
-            margin: 10,
-            color: {
-                background: '#45a049',
-                border: '#45a049',
-                highlight: {
-                background: '#45a049',
-                border: '#45a049'
+                shape: 'box',
+                borderWidth: 2,
+                margin: 12,
+                borderRadius: 8,
+                shadow: false,
+                color: {
+                    background: '#2563eb',
+                    border: '#1d4ed8',
+                    highlight: {
+                    background: '#1d4ed8',
+                    border: '#1e40af'
+                    }
+                },
+                font: {
+                    color: 'white',
+                    size: 14,
+                    face: 'Roboto, Arial'
                 }
-            },
-            font: {
-                color: 'white'
-            }
             },
             edges: {
                 color: {
-                    color: '#45a049',
-                    highlight: '#368038'  
+                    color: '#2563eb',
+                    highlight: '#1d4ed8'  
                 },
                 length: 250,  // Increase this value to make connections longer
                 smooth: {
