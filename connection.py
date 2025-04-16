@@ -38,8 +38,8 @@ class Edge:
             color = '#2196F3'  # Blue for Molecular Function
         elif self.relation_type == RelationType.CC:
             color = '#9C27B0'  # Purple for Cellular Component
-        elif self.relation_type == RelationType.AI:
-            color = '#FF5722'  # Orange for AI based connection
+        elif self.relation_type == RelationType.RS:
+            color = '#FF5722'  # Orange for Research based connection
         else:
             color = '#757575'  # Grey default
                     
